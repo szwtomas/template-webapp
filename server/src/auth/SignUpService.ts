@@ -1,6 +1,7 @@
 import {UserDal} from "../user/UserDal";
 import {PasswordHasher} from "./PasswordHasher";
 import {User} from "../user/User";
+import {UserAlreadyExistsError} from "./UserAlreadyExistsError";
 
 export class SignUpService {
     private userDal: UserDal;
@@ -20,7 +21,7 @@ export class SignUpService {
     private async throwOnUserAlreadyExists(email: string): Promise<void> {
         const existingUser = await this.userDal.getUserByEmail(email);
         if (existingUser !== undefined) {
-            throw new Error("User already exists with email: " + email);
+            throw new UserAlreadyExistsError("User already exists with email: " + email);
         }
     }
 }

@@ -1,7 +1,11 @@
-import express, {Request, Response} from "express";
+import express from "express";
 import {PasswordHasher} from "./auth/PasswordHasher";
 import {UserDal} from "./user/UserDal";
 import {SignUpService} from "./auth/SignUpService";
+import {AuthController} from "./auth/AuthController";
+import {provideAuthRouter} from "./routes/authRoutes";
+import {provideHealthRoutes} from "./routes/healthRoutes";
+import {HealthCheckController} from "./health/HealthCheckController";
 
 const app = express();
 
@@ -12,27 +16,14 @@ const PORT = 3000;
 const passwordHasher = new PasswordHasher();
 const userDal = new UserDal();
 const signUpService = new SignUpService(userDal, passwordHasher);
+const authController = new AuthController(signUpService);
+const healthCheckController = new HealthCheckController();
 
-app.get("/health", (_req, res) => {
-    res.status(200).send("0");
-});
+const healthCheckRouter = provideHealthRoutes(healthCheckController);
+const authRouter = provideAuthRouter(authController);
 
-app.post("/user", async (req: Request, res: Response) => {
-    const {email, password} = req.body;
-    if ((typeof password !== "string") || (typeof email !== "string")) {
-        res.status(400).send("Invalid email or password");
-        return
-    }
-
-    try {
-        const createdUser = await signUpService.signUp(email, password);
-        console.log(`Created user with id ${createdUser.id} and email ${createdUser.email}`);
-        res.status(201).send(`Created user with id ${createdUser.id}`);
-    } catch (err) {
-        console.log(`Error creating user: ${(err as Error).message}`);
-        res.status(500).send("Error creating user");
-    }
-});
+app.use("/api/auth", authRouter);
+app.use("/api/health-check", healthCheckRouter);
 
 app.listen(PORT, () => {
     console.log(`Server started on port ${PORT}`);
