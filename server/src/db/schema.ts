@@ -7,7 +7,7 @@ export const users = pgTable("user", {
 });
 
 export const userSessions = pgTable("user_session", {
-    sessionToken: varchar("user_session", {length: 63}).primaryKey(),
+    sessionToken: varchar("session_token", {length: 63}).primaryKey(),
     userId: integer("user_id").notNull(),
     isActive: boolean("is_active").notNull().default(true),
     expiresAt: timestamp("expires_at").notNull(),

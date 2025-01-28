@@ -4,14 +4,20 @@ import {UserAlreadyExistsError} from "./UserAlreadyExistsError";
 import {AuthenticationService} from "./AuthenticationService";
 import {UserDoesNotExistError} from "./UserDoesNotExistError";
 import {InvalidPasswordError} from "./InvalidPasswordError";
+import {UserSessionService} from "./session/UserSessionService";
 
 export class AuthController {
     private signUpService: SignUpService;
     private authenticationService: AuthenticationService;
+    private userSessionService: UserSessionService;
 
-    constructor(signUpService: SignUpService, authenticationService: AuthenticationService) {
+    constructor(
+        signUpService: SignUpService,
+        authenticationService: AuthenticationService,
+        userSessionService: UserSessionService) {
         this.signUpService = signUpService;
         this.authenticationService = authenticationService;
+        this.userSessionService = userSessionService;
     }
 
     public async logIn(req: Request, res: Response) {
@@ -23,7 +29,9 @@ export class AuthController {
 
         try {
             const authenticatedUser = await this.authenticationService.authenticate(email, password);
-            res.status(200).json({email: authenticatedUser.email, id: authenticatedUser.id});
+            const session = await this.userSessionService.createSession(authenticatedUser.id);
+            res.cookie("session-token", session.token, {httpOnly: true, path: "/", secure: true, sameSite: "none"});
+            res.status(200).send("authenticated");
         } catch (err) {
             if (err instanceof UserDoesNotExistError || err instanceof InvalidPasswordError) {
                 res.status(401).send("Invalid credentials");
