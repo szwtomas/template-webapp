@@ -17,15 +17,17 @@ export class UserDal {
         return {
             id: user.userId,
             email: user.email,
+            password: user.password,
         };
     }
 
     public async createUser(email: string, password: string): Promise<User> {
-        const result = await db.insert(users).values({ email, password }).returning();
+        const result = await db.insert(users).values({email, password}).returning();
         const newUser = result[0];
         return {
             id: newUser.userId,
             email: newUser.email,
+            password: password,
         };
     }
 }

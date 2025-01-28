@@ -1,0 +1,1 @@
+export class UserDoesNotExistError extends Error {}

@@ -2,6 +2,7 @@ import {SignUpService} from "./SignUpService";
 import {UserDal} from "../user/UserDal";
 import {PasswordHasher} from "./PasswordHasher";
 import {User} from "../user/User";
+import {UserAlreadyExistsError} from "./UserAlreadyExistsError";
 
 jest.mock("../user/UserDal");
 jest.mock("./PasswordHasher");
@@ -26,7 +27,7 @@ describe("SignUpService", () => {
             const email = "test@example.com";
             const rawPassword = "password123";
             const hashedPassword = "hashedPassword";
-            const newUser: User = {id: 1, email};
+            const newUser: User = {id: 1, email, password: hashedPassword};
 
             passwordHasherMock.hashPassword.mockResolvedValue(hashedPassword);
             userDalMock.createUser.mockResolvedValue(newUser);
@@ -38,6 +39,13 @@ describe("SignUpService", () => {
             expect(passwordHasherMock.hashPassword).toHaveBeenCalledWith(rawPassword);
             expect(userDalMock.createUser).toHaveBeenCalledWith(email, hashedPassword);
             expect(result).toEqual(newUser);
+        });
+
+        it("should throw if user already exists", async () => {
+            const email = "test@example.com";
+            const rawPassword = "my-password";
+            userDalMock.getUserByEmail.mockResolvedValue({email: "test@example.com", password: "password123", id: 23});
+            await expect(signUpService.signUp(email, rawPassword)).rejects.toThrow(UserAlreadyExistsError);
         });
     });
 });
